@@ -3,6 +3,7 @@ package cyberstation
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -61,6 +62,9 @@ func parseTable(scanner *bufio.Scanner) ([]Train, error) {
 	var current *Train
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
+		if strings.Contains(line, "受け付け時間外") {
+			return nil, errors.New("受付時間外です")
+		}
 		if tableSeeking {
 			tableSeeking = !strings.Contains(line, "列車名")
 			continue

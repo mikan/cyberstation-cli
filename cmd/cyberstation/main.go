@@ -36,14 +36,17 @@ func main() {
 	trains, err := cyberstation.Query(parsed, *from, *to)
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
+		os.Exit(1)
 	}
 	if len(trains) == 0 {
 		fmt.Println("エラー: 結果がありません")
+		os.Exit(1)
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 0, '\t', 0)
 	_, err = fmt.Fprintf(w, "列車名\t発時刻\t着時刻\t指🚭\t指🚬\tG🚭\tG🚬\tA寝🚭\tA寝🚬\tB寝🚭\tB寝🚬\n")
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
+		os.Exit(1)
 	}
 	reservable := false
 	for _, train := range trains {
@@ -56,6 +59,7 @@ func main() {
 			emoji(train.SleeperBNoSmoking), emoji(train.SleeperBSmoking),
 		); err != nil {
 			fmt.Printf("エラー: %v\n", err)
+			os.Exit(1)
 		}
 		if !reservable && train.IsReservable() {
 			reservable = true
@@ -63,6 +67,7 @@ func main() {
 	}
 	if err := w.Flush(); err != nil {
 		fmt.Printf("エラー: %v\n", err)
+		os.Exit(1)
 	}
 	if reservable {
 		fmt.Printf("%s %s %s▶%s 空席があります😃\n", *d, *t, *from, *to)
