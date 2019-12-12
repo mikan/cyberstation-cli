@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -33,22 +32,14 @@ func Vacancy(target time.Time, departure, arrival string) ([]Train, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("failed to close response: %v", err)
-		}
-	}()
+	defer SafeClose(resp.Body, "response")
 	return parseTable(bufio.NewScanner(transform.NewReader(resp.Body, japanese.ShiftJIS.NewDecoder())))
 }
 
 func shiftJIS(name string) string {
 	w := bytes.Buffer{}
 	tw := transform.NewWriter(&w, japanese.ShiftJIS.NewEncoder())
-	defer func() {
-		if err := tw.Close(); err != nil {
-			log.Printf("failed to close response: %v", err)
-		}
-	}()
+	defer SafeClose(tw, "shift_jis encoder")
 	if _, err := tw.Write([]byte(name)); err != nil {
 		return name
 	}
