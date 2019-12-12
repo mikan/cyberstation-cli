@@ -14,18 +14,18 @@ import (
 	"golang.org/x/text/transform"
 )
 
-const vacancy = "http://www1.jr.cyberstation.ne.jp/csws/Vacancy.do"
+const vacancyURL = "http://www1.jr.cyberstation.ne.jp/csws/Vacancy.do"
 
-// Query sends reservation query and parse response.
-func Query(target time.Time, departure, arrival string) ([]Train, error) {
+// Vacancy は空席情報を照会します。
+func Vacancy(target time.Time, departure, arrival string) ([]Train, error) {
 	form := fmt.Sprintf("script=1&month=%d&day=%d&hour=%d&minute=%d&train=5&dep_stn=%s&arr_stn=%s",
-		target.Month(), target.Day(), target.Hour(), target.Minute(), encodeStationName(departure), encodeStationName(arrival))
-	req, err := http.NewRequest(http.MethodPost, vacancy, strings.NewReader(form))
+		target.Month(), target.Day(), target.Hour(), target.Minute(), shiftJIS(departure), shiftJIS(arrival))
+	req, err := http.NewRequest(http.MethodPost, vacancyURL, strings.NewReader(form))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Referer", "http://www1.jr.cyberstation.ne.jp/csws/Vacancy.do")
+	req.Header.Set("Referer", vacancyURL)
 	resp, err := new(http.Client).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
@@ -41,7 +41,7 @@ func Query(target time.Time, departure, arrival string) ([]Train, error) {
 	return parseTable(bufio.NewScanner(transform.NewReader(resp.Body, japanese.ShiftJIS.NewDecoder())))
 }
 
-func encodeStationName(name string) string {
+func shiftJIS(name string) string {
 	w := bytes.Buffer{}
 	tw := transform.NewWriter(&w, japanese.ShiftJIS.NewEncoder())
 	defer func() {

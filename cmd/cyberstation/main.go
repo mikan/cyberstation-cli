@@ -33,7 +33,7 @@ func main() {
 		flag.Usage()
 		os.Exit(2)
 	}
-	trains, err := cyberstation.Query(parsed, *from, *to)
+	trains, err := cyberstation.Vacancy(parsed, *from, *to)
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		os.Exit(1)
