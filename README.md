@@ -8,7 +8,7 @@ Go の標準ライブラリと `golang.org/x/text` だけでがんばります�
 ## Install
 
 ```
-go get -u github.com/mikan/cyberstation-cli
+go get -u github.com/mikan/cyberstation-cli/cmd/cyberstation
 ```
 
 ## Usage
