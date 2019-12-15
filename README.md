@@ -1,6 +1,10 @@
 cyberstation-cli
 ================
 
+
+[![Actions Status](https://github.com/mikan/cyberstation-cli/workflows/Go/badge.svg)](https://github.com/mikan/cyberstation-cli/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mikan/cyberstation-cli)](https://goreportcard.com/report/github.com/mikan/cyberstation-cli)
+
 JR の指定席の空席案内 ([JR サイバーステーション](http://www.jr.cyberstation.ne.jp/)) をコマンドラインで問い合わせます。
 
 Go の標準ライブラリと `golang.org/x/text` だけでがんばります。
