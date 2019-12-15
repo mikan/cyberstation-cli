@@ -16,7 +16,7 @@ import (
 const vacancyURL = "http://www1.jr.cyberstation.ne.jp/csws/Vacancy.do"
 
 // Vacancy は空席情報を照会します。
-func Vacancy(target time.Time, departure, arrival string, group int) ([]Train, error) {
+func Vacancy(target time.Time, departure, arrival string, group TrainGroup) ([]Train, error) {
 	form := fmt.Sprintf("script=1&month=%d&day=%d&hour=%d&minute=%d&train=%d&dep_stn=%s&arr_stn=%s",
 		target.Month(), target.Day(), target.Hour(), target.Minute(), group, shiftJIS(departure), shiftJIS(arrival))
 	req, err := http.NewRequest(http.MethodPost, vacancyURL, strings.NewReader(form))
@@ -33,7 +33,7 @@ func Vacancy(target time.Time, departure, arrival string, group int) ([]Train, e
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 	defer SafeClose(resp.Body, "response")
-	return parseTable(bufio.NewScanner(transform.NewReader(resp.Body, japanese.ShiftJIS.NewDecoder())))
+	return parseTable(bufio.NewScanner(transform.NewReader(resp.Body, japanese.ShiftJIS.NewDecoder())), group)
 }
 
 func shiftJIS(name string) string {
@@ -46,7 +46,7 @@ func shiftJIS(name string) string {
 	return w.String()
 }
 
-func parseTable(scanner *bufio.Scanner) ([]Train, error) {
+func parseTable(scanner *bufio.Scanner, group TrainGroup) ([]Train, error) {
 	var records []Train
 	tableSeeking := true
 	tdSeeking := false
@@ -96,26 +96,43 @@ func parseTable(scanner *bufio.Scanner) ([]Train, error) {
 		if current == nil {
 			continue
 		}
-		if len(current.DepartureTime) == 0 {
-			current.DepartureTime = content
-		} else if len(current.ArriveTime) == 0 {
-			current.ArriveTime = content
-		} else if len(current.StandardNoSmoking) == 0 {
-			current.StandardNoSmoking = Availability(content)
-		} else if len(current.StandardSmoking) == 0 {
-			current.StandardSmoking = Availability(content)
-		} else if len(current.GreenNoSmoking) == 0 {
-			current.GreenNoSmoking = Availability(content)
-		} else if len(current.GreenSmoking) == 0 {
-			current.GreenSmoking = Availability(content)
-		} else if len(current.SleeperANoSmoking) == 0 {
-			current.SleeperANoSmoking = Availability(content)
-		} else if len(current.SleeperASmoking) == 0 {
-			current.SleeperASmoking = Availability(content)
-		} else if len(current.SleeperBNoSmoking) == 0 {
-			current.SleeperBNoSmoking = Availability(content)
-		} else if len(current.SleeperBSmoking) == 0 {
-			current.SleeperBSmoking = Availability(content)
+		switch group {
+		case HayabusaGroup:
+			fallthrough
+		case TokiGroup:
+			if len(current.DepartureTime) == 0 {
+				current.DepartureTime = content
+			} else if len(current.ArriveTime) == 0 {
+				current.ArriveTime = content
+			} else if len(current.StandardNoSmoking) == 0 {
+				current.StandardNoSmoking = Availability(content)
+			} else if len(current.GreenNoSmoking) == 0 {
+				current.GreenNoSmoking = Availability(content)
+			} else if len(current.GranClassNoSmoking) == 0 {
+				current.GranClassNoSmoking = Availability(content)
+			}
+		default:
+			if len(current.DepartureTime) == 0 {
+				current.DepartureTime = content
+			} else if len(current.ArriveTime) == 0 {
+				current.ArriveTime = content
+			} else if len(current.StandardNoSmoking) == 0 {
+				current.StandardNoSmoking = Availability(content)
+			} else if len(current.StandardSmoking) == 0 {
+				current.StandardSmoking = Availability(content)
+			} else if len(current.GreenNoSmoking) == 0 {
+				current.GreenNoSmoking = Availability(content)
+			} else if len(current.GreenSmoking) == 0 {
+				current.GreenSmoking = Availability(content)
+			} else if len(current.SleeperANoSmoking) == 0 {
+				current.SleeperANoSmoking = Availability(content)
+			} else if len(current.SleeperASmoking) == 0 {
+				current.SleeperASmoking = Availability(content)
+			} else if len(current.SleeperBNoSmoking) == 0 {
+				current.SleeperBNoSmoking = Availability(content)
+			} else if len(current.SleeperBSmoking) == 0 {
+				current.SleeperBSmoking = Availability(content)
+			}
 		}
 	}
 	if err := scanner.Err(); err != nil {

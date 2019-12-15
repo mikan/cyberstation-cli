@@ -49,7 +49,7 @@ func main() {
 	post(fmt.Sprintf("%s %s %s▶%s の監視を開始します...", *d, *t, *from, *to))
 	currentState := offlineState
 	for {
-		trains, err := cyberstation.Vacancy(parsed, *from, *to, *group)
+		trains, err := cyberstation.Vacancy(parsed, *from, *to, cyberstation.TrainGroup(*group))
 		if err != nil || len(trains) == 0 {
 			if err != nil && strings.Contains(err.Error(), "照会できない") {
 				post("監視を終了します... (原因: " + err.Error() + ")")
@@ -60,7 +60,7 @@ func main() {
 			reservable := false
 			trainName := ""
 			for _, train := range trains {
-				if train.IsReservable() {
+				if train.IsAvailable() {
 					reservable = true
 					trainName = train.TrainName
 					break

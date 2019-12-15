@@ -14,19 +14,31 @@ go get -u github.com/mikan/cyberstation-cli/cmd/cyberstation
 ## Usage
 
 ```
-cyberstation -date YYYY/MM/DD -time HH:MM -from <乗車駅> -to <降車駅>
+cyberstation -date YYYY/MM/DD -time HH:MM -from <乗車駅> -to <降車駅> -group <列車種別>
 ```
 
-例:
+在来線の例:
 
 ```
-cyberstation -date 2019/12/30 -time 22:00 -from 大垣 -to 品川
+cyberstation -date 2019/12/30 -time 10:00 -from 品川 -to 大垣
 ```
+
+新幹線の例:
+
+```
+cyberstation -date 2019/12/30 -time 10:00 -from かみのやま温泉 -to さくらんぼ東根 -group 3
+```
+
+`-group` の数値は以下のルールに従って指定する必要があります:
+
+- 1: 東海道・山陽・九州新幹線 (のぞみ, ひかり, みずほ, さくら, つばめ)
+- 2: 東海道・山陽新幹線 (こだま)
+- 3: 東北・北海道・山形・秋田新幹線 (はやぶさ, はやて, やまびこ, なすの, つばさ, こまち)
+- 4: 上越・北陸新幹線 (とき, たにがわ, かがやき, はくたか, あさま, つるぎ)
 
 ## Limitation
 
 - 利用可能時間は 6:30 から 22:30 の間のみです
-- 今のところ在来線のみに対応しています
 - 駅名の候補が複数ある場合は未対応、完全一致する駅名をサイトで調べて渡してください
 
 ## License
