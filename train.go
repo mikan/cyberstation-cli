@@ -25,9 +25,9 @@ const (
 	KodamaGroup = TrainGroup(2)
 	// HayabusaGroup は "はやぶさ" 系 (東北・北海道・山形・秋田新幹線) の列車種別を示します。
 	HayabusaGroup = TrainGroup(3)
-	// TokiGriup は "とき" 系 (上越・北陸新幹線) の列車種別を示します。
+	// TokiGroup は "とき" 系 (上越・北陸新幹線) の列車種別を示します。
 	TokiGroup = TrainGroup(4)
-	// ZairaiGriup は在来線の列車種別を示します。
+	// ZairaiGroup は在来線の列車種別を示します。
 	ZairaiGroup = TrainGroup(5)
 )
 
