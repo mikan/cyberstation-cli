@@ -16,9 +16,9 @@ import (
 const vacancyURL = "http://www1.jr.cyberstation.ne.jp/csws/Vacancy.do"
 
 // Vacancy は空席情報を照会します。
-func Vacancy(target time.Time, departure, arrival string) ([]Train, error) {
-	form := fmt.Sprintf("script=1&month=%d&day=%d&hour=%d&minute=%d&train=5&dep_stn=%s&arr_stn=%s",
-		target.Month(), target.Day(), target.Hour(), target.Minute(), shiftJIS(departure), shiftJIS(arrival))
+func Vacancy(target time.Time, departure, arrival string, group int) ([]Train, error) {
+	form := fmt.Sprintf("script=1&month=%d&day=%d&hour=%d&minute=%d&train=%d&dep_stn=%s&arr_stn=%s",
+		target.Month(), target.Day(), target.Hour(), target.Minute(), group, shiftJIS(departure), shiftJIS(arrival))
 	req, err := http.NewRequest(http.MethodPost, vacancyURL, strings.NewReader(form))
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func Vacancy(target time.Time, departure, arrival string) ([]Train, error) {
 	req.Header.Set("Referer", vacancyURL)
 	resp, err := new(http.Client).Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, fmt.Errorf("リクエストを送信できませんでした: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -55,6 +55,15 @@ func parseTable(scanner *bufio.Scanner) ([]Train, error) {
 		line := strings.TrimSpace(scanner.Text())
 		if strings.Contains(line, "受け付け時間外") {
 			return nil, errors.New("受付時間外です")
+		}
+		if strings.Contains(line, "ご希望の乗車日の空席状況は照会できません") {
+			return nil, errors.New("照会できない日時です")
+		}
+		if strings.Contains(line, "入力された項目に誤りがあります") {
+			return nil, errors.New("照会できない駅名です")
+		}
+		if strings.Contains(line, "ご希望の情報はお取り扱いできません") {
+			return nil, nil
 		}
 		if tableSeeking {
 			tableSeeking = !strings.Contains(line, "列車名")
@@ -92,25 +101,25 @@ func parseTable(scanner *bufio.Scanner) ([]Train, error) {
 		} else if len(current.ArriveTime) == 0 {
 			current.ArriveTime = content
 		} else if len(current.StandardNoSmoking) == 0 {
-			current.StandardNoSmoking = content
+			current.StandardNoSmoking = Availability(content)
 		} else if len(current.StandardSmoking) == 0 {
-			current.StandardSmoking = content
+			current.StandardSmoking = Availability(content)
 		} else if len(current.GreenNoSmoking) == 0 {
-			current.GreenNoSmoking = content
+			current.GreenNoSmoking = Availability(content)
 		} else if len(current.GreenSmoking) == 0 {
-			current.GreenSmoking = content
+			current.GreenSmoking = Availability(content)
 		} else if len(current.SleeperANoSmoking) == 0 {
-			current.SleeperANoSmoking = content
+			current.SleeperANoSmoking = Availability(content)
 		} else if len(current.SleeperASmoking) == 0 {
-			current.SleeperASmoking = content
+			current.SleeperASmoking = Availability(content)
 		} else if len(current.SleeperBNoSmoking) == 0 {
-			current.SleeperBNoSmoking = content
+			current.SleeperBNoSmoking = Availability(content)
 		} else if len(current.SleeperBSmoking) == 0 {
-			current.SleeperBSmoking = content
+			current.SleeperBSmoking = Availability(content)
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("照会結果の解析に失敗しました: %w", err)
 	}
 	return records, nil
 }

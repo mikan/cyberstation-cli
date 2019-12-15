@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/mikan/cyberstation-cli"
@@ -25,11 +26,12 @@ const (
 )
 
 var (
-	webhook  = flag.String("webhook", "", "webhook URL")
 	d        = flag.String("date", time.Now().Format(dateFormat), "date")
 	t        = flag.String("time", time.Now().Format(timeFormat), "time")
 	from     = flag.String("from", "", "departure station name")
 	to       = flag.String("to", "", "arrival station name")
+	group    = flag.Int("group", 5, "1: のぞみ・みずほ等, 2: こだま, 3: はやぶさ等, 4: とき・かがやき等, 5: 在来線")
+	webhook  = flag.String("webhook", "", "webhook URL")
 	interval = flag.Int("interval", 1, "checking interval in minutes")
 )
 
@@ -47,8 +49,12 @@ func main() {
 	post(fmt.Sprintf("%s %s %s▶%s の監視を開始します...", *d, *t, *from, *to))
 	currentState := offlineState
 	for {
-		trains, err := cyberstation.Vacancy(parsed, *from, *to)
+		trains, err := cyberstation.Vacancy(parsed, *from, *to, *group)
 		if err != nil || len(trains) == 0 {
+			if err != nil && strings.Contains(err.Error(), "照会できない") {
+				post("監視を終了します... (原因: " + err.Error() + ")")
+				break
+			}
 			currentState = offlineState
 		} else {
 			reservable := false

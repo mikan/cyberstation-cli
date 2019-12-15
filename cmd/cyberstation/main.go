@@ -16,10 +16,11 @@ const (
 )
 
 var (
-	d    = flag.String("date", time.Now().Format(dateFormat), "date")
-	t    = flag.String("time", time.Now().Format(timeFormat), "time")
-	from = flag.String("from", "", "departure station name")
-	to   = flag.String("to", "", "arrival station name")
+	d     = flag.String("date", time.Now().Format(dateFormat), "日付 (例: 2019/1/12)")
+	t     = flag.String("time", time.Now().Format(timeFormat), "時刻 (例: 12:30)")
+	from  = flag.String("from", "", "出発駅 (例: 東京)")
+	to    = flag.String("to", "", "到着駅 (例: 大垣)")
+	group = flag.Int("group", 5, "1: のぞみ・みずほ等, 2: こだま, 3: はやぶさ等, 4: とき・かがやき等, 5: 在来線")
 )
 
 func main() {
@@ -33,7 +34,7 @@ func main() {
 		flag.Usage()
 		os.Exit(2)
 	}
-	trains, err := cyberstation.Vacancy(parsed, *from, *to)
+	trains, err := cyberstation.Vacancy(parsed, *from, *to, *group)
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		os.Exit(1)
@@ -53,10 +54,10 @@ func main() {
 		if _, err := fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 			train.TrainName,
 			train.DepartureTime, train.ArriveTime,
-			emoji(train.StandardNoSmoking), emoji(train.StandardSmoking),
-			emoji(train.GreenNoSmoking), emoji(train.GreenSmoking),
-			emoji(train.SleeperANoSmoking), emoji(train.SleeperASmoking),
-			emoji(train.SleeperBNoSmoking), emoji(train.SleeperBSmoking),
+			train.StandardNoSmoking.Emoji(), train.StandardSmoking.Emoji(),
+			train.GreenNoSmoking.Emoji(), train.GreenSmoking.Emoji(),
+			train.SleeperANoSmoking.Emoji(), train.SleeperASmoking.Emoji(),
+			train.SleeperBNoSmoking.Emoji(), train.SleeperBSmoking.Emoji(),
 		); err != nil {
 			fmt.Printf("エラー: %v\n", err)
 			os.Exit(1)
@@ -73,22 +74,5 @@ func main() {
 		fmt.Printf("%s %s %s▶%s 空席があります😃\n", *d, *t, *from, *to)
 	} else {
 		fmt.Printf("%s %s %s▶%s 満席です😢\n", *d, *t, *from, *to)
-	}
-}
-
-func emoji(symbol string) string {
-	switch symbol {
-	case cyberstation.NotReservable:
-		return "⚪"
-	case cyberstation.UseSmokingRoom:
-		return "⚫"
-	case cyberstation.NotAvailable:
-		return "🔴"
-	case cyberstation.LittleAvailable:
-		return "🔺"
-	case cyberstation.Available:
-		return "🔵"
-	default:
-		return symbol
 	}
 }
